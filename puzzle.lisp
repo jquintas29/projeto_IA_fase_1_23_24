@@ -13,7 +13,7 @@
     (nil nil nil nil nil nil nil nil nil nil) 
     (nil nil nil nil nil nil nil nil nil nil) 
     (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil)
+    (nil nil nil nil nil nil nil nil nil 99)
     )
 )
 
@@ -191,15 +191,37 @@ com o simétrico do número da variável numero substituido por NIL"
   (parse-integer (coerce (reverse (coerce (princ-to-string numero) 'list)) 'string))
 )
 
-(defun posicao-cavalo (tabuleiro &optional (valor-linha 0))
+(defun substituir-duplo (tabuleiro &optional (numero 0))
+    (cond ((= numero 0) (setq numero (maior-duplo tabuleiro))))
+    (let ((posicao (procurar-posicao tabuleiro numero)))
+        (substituir (nth 0 posicao) (nth 1 posicao) tabuleiro)
+    )   
+)
+
+(defun maior-duplo (tabuleiro)
+    (let* ((tabuleiro-liso (alisa tabuleiro)) (duplos (remove-if-not #'isduplo tabuleiro-liso)))
+        (setq duplos (apply #'max duplos))
+        (cond ((null duplos) nil) (t duplos))
+    )
+)
+
+(defun isduplo (numero)
+    (cond 
+        ((null numero) nil)
+        ((= (mod numero 11) 0) T)
+        (t nil)
+    )
+)
+
+(defun procurar-posicao (tabuleiro valor &optional (valor-linha 0))
 "Função que recebe o tabuleiro e devolve a posição (i j) em que se encontra o
 cavalo. Caso o cavalo não se encontre no tabuleiro retorna NIL."
     (cond 
         ((>= valor-linha (length tabuleiro)) nil)
         ((let ((lista-linha (linha valor-linha tabuleiro)))
             (cond 
-                ((find T lista-linha) (cons valor-linha (cons (position T lista-linha) nil)))
-                (t (posicao-cavalo tabuleiro (+ valor-linha 1)))
+                ((find valor lista-linha) (cons valor-linha (cons (position valor lista-linha) nil)))
+                (t (procurar-posicao tabuleiro valor (+ valor-linha 1)))
             )
         ))
     )
