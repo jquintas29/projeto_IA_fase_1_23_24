@@ -1,6 +1,23 @@
 ;;;Ficheiro puzzle.lisp
 ;;Ficheiro com operadores e heurísticas específicos do domínio da aplicação
 
+(defun tabuleiro-jogado ()
+"Tabuleiro de teste igual ao anterior mas tendo sido colocado o cavalo na posição: i=0 e j=0"
+  '(
+    (T 25 54 89 21 8 36 14 41 96) 
+    (78 47 56 23 5 49 13 12 26 60) 
+    (0 27 17 83 34 93 74 52 45 80) 
+    (69 9 77 95 55 39 91 73 57 30) 
+    (24 15 22 86 1 11 68 79 76 72) 
+    (81 48 32 2 64 16 50 37 29 71) 
+    (99 51 6 18 53 28 7 63 10 88) 
+    (59 42 46 85 90 75 87 43 20 31) 
+    (3 61 58 44 65 82 19 4 35 62) 
+    (33 70 84 40 66 38 92 67 98 97)
+    )
+)
+
+
 (defun tabuleiro-a ()
 "Tabuleiro para o problema A"
   '(
@@ -13,7 +30,7 @@
     (nil nil nil nil nil nil nil nil nil nil) 
     (nil nil nil nil nil nil nil nil nil nil) 
     (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil 99)
+    (nil nil nil nil nil nil nil nil nil nil)
     )
 )
 
@@ -81,16 +98,13 @@
     )
 )
 
-;; TODO Aplicar a regra do duplo, caso calhe numa casa de número duplo (exemplo: 99) 
-;;retirar do tabuleiro outro duplo à escolha do jogador (por default será o de maior valor).
-
 ;;; Métodos seletores
 (defun linha (indice tabuleiro)
 "Função que recebe um índice e o tabuleiro e retorna uma lista que representa essa linha do
 tabuleiro."
     (cond ((and (integerp indice) (>= indice 0) (< indice (length tabuleiro))) 
             (nth indice tabuleiro))
-          (t (error "Indice inválido"))
+          (t (error "Indice de linha inválido"))
     )
 )
 
@@ -99,13 +113,12 @@ tabuleiro."
 tabuleiro."
     (cond ((and (integerp indiceColuna) (>= indiceColuna 0) (< indiceColuna (length (linha indiceLinha tabuleiro)))) 
             (nth indiceColuna (linha indiceLinha tabuleiro)))
-          (t (error "Indice inválido"))
+          (t (error "Indice de coluna inválido"))
     )
 )
 
+; não parece estar aqui a fazer nada
 (defun alisa (lista)
-"Função que devolve todos os elementos de uma lista que poderá conter sub-listas, 
-com todos os elementos agregados numa única lista principal. "
     (cond ((null lista) nil)
           ((atom (car lista)) (cons (car lista) (alisa (cdr lista))))
           (t (append (alisa (car lista)) (alisa (cdr lista))))
@@ -130,7 +143,7 @@ exemplo: (remover-se #'(lambda (x) (= x 0)) lista) -> devolve a lista sem os áto
 )
 
 (defun baralhar (lista)
-"Recebe uma e irá mudar aleatoriamente os números de forma a criar uma lista baralhada."
+"Recebe uma lista e irá mudar aleatoriamente os números de forma a criar uma lista baralhada."
     (cond ((null lista) nil)
         (t (let* ((index (random (length lista)))
                   (numberRandom (nth index lista))
@@ -153,11 +166,13 @@ e vai devolver essa lista dividida em sublistas de n elementos recebido como par
 (defun substituir-posicao (indice lista &optional (valor nil))
 "Função que recebe um índice, uma lista e um valor (por default o valor é NIL) e
 substitui pelo valor pretendido nessa posição."
-    (cond ((and (integerp indice) (>= indice 0) (< indice (length lista))) 
-                (let ((nova-lista lista))
-                        (setf (nth indice nova-lista) valor)
-                    nova-lista))
-          (t (error "Indice inválido"))
+    (cond 
+        ((and (integerp indice) (>= indice 0) (< indice (length lista))) 
+            (let ((nova-lista lista))
+                (setf (nth indice nova-lista) valor)
+            )
+        )
+        (t (error "Indice para substituir inválido"))
     )
 )
 
@@ -166,25 +181,47 @@ substitui pelo valor pretendido nessa posição."
 função retorna o tabuleiro com a célula substituída pelo valor pretendido."
     (let ((novo-tabuleiro tabuleiro) (numero (nth indice-coluna (nth indice-linha tabuleiro))))
         (substituir-posicao indice-coluna (linha indice-linha novo-tabuleiro) valor)
-        (cond ((not (eql valor 'nil)) (substituir-simetrico numero tabuleiro))
-        (novo-tabuleiro)
-    )    
-)
-)
-
-(defun substituir-simetrico (numero tabuleiro &optional (valor-linha 0))
-"Função que recebe um número, um tabuleiro. A função vai retornar o tabuleiro 
-com o simétrico do número da variável numero substituido por NIL"
-    (cond 
-        ((>= valor-linha (length tabuleiro)) nil)
-        ((let ((lista-linha (linha valor-linha tabuleiro)) (simetrico (obter-simetrico numero)))
-            (cond 
-                ((find simetrico lista-linha) (substituir valor-linha (position simetrico lista-linha) tabuleiro))
-                (t (substituir-simetrico numero tabuleiro (+ valor-linha 1)))
-            )
-        ))
+        (cond ((not (equal valor 'nil)) (substituir-simetrico numero tabuleiro)))    
     )
 )
+
+; (defun substituir (indice-linha indice-coluna tabuleiro &optional (valor 'nil))
+; "Função que recebe dois índices, o tabuleiro e um valor (por default o valor é NIL). A
+; função retorna o tabuleiro com a célula substituída pelo valor pretendido."
+;     (let ((novo-tabuleiro tabuleiro) (numero (nth indice-coluna (nth indice-linha tabuleiro))))
+;         (cond
+;             ;((equal numero valor) (format t "ERRO: O cavalo já está nesta posição"))
+;             ((not (equal valor 'nil)) (substituir-simetrico numero tabuleiro))
+;         )    
+;         (substituir-posicao indice-coluna (linha indice-linha novo-tabuleiro) valor)
+;     )
+; )
+
+
+(defun substituir-simetrico (numero tabuleiro)
+"Função que recebe um número, um tabuleiro. A função vai retornar o tabuleiro 
+com o simétrico do número da variável numero substituido por NIL"
+    (let* ((simetrico (obter-simetrico numero)) (posicao (procurar-posicao tabuleiro simetrico)))
+        (cond 
+            ((null posicao) nil)
+            (t (substituir (nth 0 posicao) (nth 1 posicao) tabuleiro))
+        )
+    )
+)
+
+; (defun substituir-simetrico (numero tabuleiro &optional (valor-linha 0))
+; "Função que recebe um número, um tabuleiro. A função vai retornar o tabuleiro 
+; com o simétrico do número da variável numero substituido por NIL"
+;     (cond 
+;         ((>= valor-linha (length tabuleiro)) nil)
+;         ((let ((lista-linha (linha valor-linha tabuleiro)) (simetrico (obter-simetrico numero)))
+;             (cond 
+;                 ((find simetrico lista-linha) (substituir valor-linha (position simetrico lista-linha) tabuleiro))
+;                 (t (substituir-simetrico numero tabuleiro (+ valor-linha 1)))
+;             )
+;         ))
+;     )
+; )
 
 (defun obter-simetrico (numero)
 "Função que recebe um número e devolve o simétrico desse número (exemplo: 56->65)"
@@ -199,6 +236,7 @@ com o simétrico do número da variável numero substituido por NIL"
 )
 
 (defun maior-duplo (tabuleiro)
+"Função que recebe um tabuleiro e retorna o duplo maior desse tabuleiro"
     (let* ((tabuleiro-liso (alisa tabuleiro)) (duplos (remove-if-not #'isduplo tabuleiro-liso)))
         (setq duplos (apply #'max duplos))
         (cond ((null duplos) nil) (t duplos))
@@ -206,6 +244,7 @@ com o simétrico do número da variável numero substituido por NIL"
 )
 
 (defun isduplo (numero)
+"Recebe um número e retorna verdadeiro (T) se o número for um duplo, retorna nil caso contrário"
     (cond 
         ((null numero) nil)
         ((= (mod numero 11) 0) T)
@@ -215,7 +254,8 @@ com o simétrico do número da variável numero substituido por NIL"
 
 (defun procurar-posicao (tabuleiro valor &optional (valor-linha 0))
 "Função que recebe o tabuleiro e devolve a posição (i j) em que se encontra o
-cavalo. Caso o cavalo não se encontre no tabuleiro retorna NIL."
+valor passado por argumento. Pode ser usado para procurar o cavalo.
+Caso o valor não se encontre no tabuleiro retorna NIL."
     (cond 
         ((>= valor-linha (length tabuleiro)) nil)
         ((let ((lista-linha (linha valor-linha tabuleiro)))
@@ -227,27 +267,166 @@ cavalo. Caso o cavalo não se encontre no tabuleiro retorna NIL."
     )
 )
 
-;;; Operadores do problema (ver lab7)
-;;operador-1
-;verificar primeiro se a ação do operador será feita dentro dos limites do tabuleiro
+(defun print-tabuleiro (tabuleiro)
+    (cond 
+        ((null tabuleiro) nil)
+        (t (progn 
+            (format t "~d~%" (car tabuleiro))
+            (print-tabuleiro (cdr tabuleiro))
+           )
+        )
+    )
+)
 
+;;; Operadores do problema (ver lab7)
+;; operador-1
+;usar função substituir() para substituir pelo valor, e depois testar se é simétrico 
+;ou duplo e aplicar a regra
+(defun operador-1 (tabuleiro)
+"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas para baixo e 1 para a esquerda.
+Devolve o tabuleiro com a nova posição do cavalo."
+    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
+           (nova-pos-linha (+ (nth 0 posicao-cavalo) 2))
+           (nova-pos-coluna (- (nth 1 posicao-cavalo) 1)))
+        (cond 
+            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
+                (error "operador-1 não pode ser realizado, operador está fora dos limites do tabuleiro."))
+            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
+        )
+        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
+        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
+        (print-tabuleiro tabuleiro)
+    )
+)
 
 ;;operador-2
-
+(defun operador-2 (tabuleiro)
+"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas para baixo e 1 para a esquerda.
+Devolve o tabuleiro com a nova posição do cavalo."
+    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
+           (nova-pos-linha (+ (nth 0 posicao-cavalo) 2))
+           (nova-pos-coluna (+ (nth 1 posicao-cavalo) 1)))
+        (cond 
+            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
+                (error "operador-2 não pode ser realizado, operador está fora dos limites do tabuleiro."))
+            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
+        )
+        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
+        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
+        (print-tabuleiro tabuleiro)
+    )
+)
 
 ;;operador-3
-
+(defun operador-3 (tabuleiro)
+"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas para a direita e 1 para baixo.
+Devolve o tabuleiro com a nova posição do cavalo."
+    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
+           (nova-pos-linha (+ (nth 0 posicao-cavalo) 1))
+           (nova-pos-coluna (+ (nth 1 posicao-cavalo) 2)))
+        (cond 
+            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
+                (error "operador-3 não pode ser realizado, operador está fora dos limites do tabuleiro."))
+            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
+        )
+        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
+        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
+        (print-tabuleiro tabuleiro)
+    )
+)
 
 ;;operador-4
-
+(defun operador-4 (tabuleiro)
+"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas para a direita e 1 para cima
+Devolve o tabuleiro com a nova posição do cavalo."
+    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
+           (nova-pos-linha (- (nth 0 posicao-cavalo) 1))
+           (nova-pos-coluna (+ (nth 1 posicao-cavalo) 2)))
+        (cond 
+            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
+                (error "operador-4 não pode ser realizado, operador está fora dos limites do tabuleiro."))
+            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
+        )
+        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
+        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
+        (print-tabuleiro tabuleiro)
+    )
+)
 
 ;;operador-5
-
+(defun operador-5 (tabuleiro)
+"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas cima e 1 para a direita
+Devolve o tabuleiro com a nova posição do cavalo."
+    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
+           (nova-pos-linha (- (nth 0 posicao-cavalo) 2))
+           (nova-pos-coluna (+ (nth 1 posicao-cavalo) 1)))
+        (cond 
+            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
+                (error "operador-5 não pode ser realizado, operador está fora dos limites do tabuleiro."))
+            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
+        )
+        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
+        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
+        (print-tabuleiro tabuleiro)
+    )
+)
 
 ;;operador-6
-
+(defun operador-6 (tabuleiro)
+"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas cima e 1 para a esquerda
+Devolve o tabuleiro com a nova posição do cavalo."
+    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
+           (nova-pos-linha (- (nth 0 posicao-cavalo) 2))
+           (nova-pos-coluna (- (nth 1 posicao-cavalo) 1)))
+        (cond 
+            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
+                (error "operador-6 não pode ser realizado, operador está fora dos limites do tabuleiro."))
+            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
+        )
+        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
+        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
+        (print-tabuleiro tabuleiro)
+    )
+)
 
 ;;operador-7
-
+(defun operador-7 (tabuleiro)
+"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas a esquerda e 1 para cima
+Devolve o tabuleiro com a nova posição do cavalo."
+    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
+           (nova-pos-linha (- (nth 0 posicao-cavalo) 1))
+           (nova-pos-coluna (- (nth 1 posicao-cavalo) 2)))
+        (cond 
+            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
+                (error "operador-7 não pode ser realizado, operador está fora dos limites do tabuleiro."))
+            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
+        )
+        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
+        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
+        (print-tabuleiro tabuleiro)
+    )
+)
 
 ;;operador-8
+(defun operador-8 (tabuleiro)
+"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas a esquerda e 1 para baixo
+Devolve o tabuleiro com a nova posição do cavalo."
+    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
+           (nova-pos-linha (+ (nth 0 posicao-cavalo) 1))
+           (nova-pos-coluna (- (nth 1 posicao-cavalo) 2)))
+        (cond 
+            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
+                (error "operador-8 não pode ser realizado, operador está fora dos limites do tabuleiro."))
+            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
+        )
+        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
+        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
+        (print-tabuleiro tabuleiro)
+    )
+)
+
+
+; Testar nos operadores se a posicao-cavalo é nil ou nao
+; Estudar error handling e se calhar trocar nos métodos que retornem erro para retornar nil em vez de erro(?)
+; Pensar que na interação com o jogador poderei ter que dar catch de erros e mostrar ao jogador esses erros, 
+;se calhar terei que deixar alguns métodos a retornar error para dar catch no método de interação com o jogador
