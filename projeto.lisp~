@@ -50,7 +50,7 @@ utilizar para procurar a solução (neste caso a procura na profundidade ou na lar
                 ((= resposta 3) '(tabuleiro-c 270))
                 ((= resposta 4) '(tabuleiro-d 600))
                 ((= resposta 5) '(tabuleiro-e 300))
-                (t '(tabuleiro-aleatorio 2000))
+                (t '(tabuleiro-aleatorio 200))
             )
         )
     )

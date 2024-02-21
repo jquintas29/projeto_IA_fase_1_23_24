@@ -38,7 +38,7 @@
     (cond 
         ((not (funcall funcao-solucao (car (abertos-bfs abertos (funcall funcao-sucessores no lista-operadores 'bfs))))) 
             (bfs 
-                (car (abertos-bfs abertos (funcall funcao-sucessores no lista-operadores 'bfs))) 
+                (car abertos) 
                 funcao-solucao 
                 funcao-sucessores 
                 lista-operadores 

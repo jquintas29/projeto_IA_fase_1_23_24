@@ -104,7 +104,7 @@
 tabuleiro."
     (cond ((and (integerp indice) (>= indice 0) (< indice (length tabuleiro))) 
             (nth indice tabuleiro))
-          (t (error "Indice de linha inválido"))
+          (t nil)
     )
 )
 
@@ -113,12 +113,14 @@ tabuleiro."
 tabuleiro."
     (cond ((and (integerp indiceColuna) (>= indiceColuna 0) (< indiceColuna (length (linha indiceLinha tabuleiro)))) 
             (nth indiceColuna (linha indiceLinha tabuleiro)))
-          (t (error "Indice de coluna inválido"))
+          (t nil)
     )
 )
 
 ; não parece estar aqui a fazer nada
 (defun alisa (lista)
+"Devolve todos os elementos de uma lista que poderá conter sub-listas, 
+com todos os elementos agregados numa única lista principal."
     (cond ((null lista) nil)
           ((atom (car lista)) (cons (car lista) (alisa (cdr lista))))
           (t (append (alisa (car lista)) (alisa (cdr lista))))
@@ -145,10 +147,8 @@ exemplo: (remover-se #'(lambda (x) (= x 0)) lista) -> devolve a lista sem os áto
 (defun baralhar (lista)
 "Recebe uma lista e irá mudar aleatoriamente os números de forma a criar uma lista baralhada."
     (cond ((null lista) nil)
-        (t (let* ((index (random (length lista)))
-                  (numberRandom (nth index lista))
-                  (nova-lista (remover-se #'(lambda (x) (= x numberRandom)) lista)))
-                (cons numberRandom (baralhar nova-lista))
+        (t (let ((numberRandom (nth (random (length lista)) lista)))
+                (cons numberRandom (baralhar (remover-se #'(lambda (x) (= x numberRandom)) lista)))
             )
         )
     )
@@ -163,83 +163,71 @@ e vai devolver essa lista dividida em sublistas de n elementos recebido como par
     )
 )
 
-(defun substituir-posicao (indice lista &optional (valor nil))
-"Função que recebe um índice, uma lista e um valor (por default o valor é NIL) e
-substitui pelo valor pretendido nessa posição."
+(defun substituir (indice-linha indice-coluna tabuleiro &optional (novo-numero 'nil))
+  "Substitui o número em uma posição específica do tabuleiro."
     (cond 
-        ((and (integerp indice) (>= indice 0) (< indice (length lista))) 
-            (let ((nova-lista lista))
-                (setf (nth indice nova-lista) valor)
+        ((not (equal novo-numero 'nil))
+            (cond 
+                ((isduplo (celula indice-linha indice-coluna tabuleiro))
+                    (cond 
+                        ((maior-duplo (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero))) 
+                            (substituir-duplo (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero))))
+                        (t (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero)))
+                    )
+                )
+              (t (substituir-simetrico (celula indice-linha indice-coluna tabuleiro)  
+                    (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero))))
             )
         )
-        (t (error "Indice para substituir inválido"))
+        (t (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero)))
     )
 )
 
-(defun substituir (indice-linha indice-coluna tabuleiro &optional (valor 'nil))
-"Função que recebe dois índices, o tabuleiro e um valor (por default o valor é NIL). A
-função retorna o tabuleiro com a célula substituída pelo valor pretendido."
-    (let ((novo-tabuleiro tabuleiro) (numero (nth indice-coluna (nth indice-linha tabuleiro))))
-        (substituir-posicao indice-coluna (linha indice-linha novo-tabuleiro) valor)
-        (cond ((not (equal valor 'nil)) (substituir-simetrico numero tabuleiro)))    
+(defun substituir-linha (linha indice-coluna novo-numero)
+"Substitui o número em uma posição específica da linha."
+    (cond
+        ((null linha) nil)
+        ((= indice-coluna 0) (cons novo-numero (cdr linha)))
+        (t (cons (car linha) (substituir-linha (cdr linha) (1- indice-coluna) novo-numero)))
     )
 )
 
-; (defun substituir (indice-linha indice-coluna tabuleiro &optional (valor 'nil))
-; "Função que recebe dois índices, o tabuleiro e um valor (por default o valor é NIL). A
-; função retorna o tabuleiro com a célula substituída pelo valor pretendido."
-;     (let ((novo-tabuleiro tabuleiro) (numero (nth indice-coluna (nth indice-linha tabuleiro))))
-;         (cond
-;             ;((equal numero valor) (format t "ERRO: O cavalo já está nesta posição"))
-;             ((not (equal valor 'nil)) (substituir-simetrico numero tabuleiro))
-;         )    
-;         (substituir-posicao indice-coluna (linha indice-linha novo-tabuleiro) valor)
-;     )
-; )
+(defun substituir-resto (tabuleiro indice-linha nova-linha)
+"Retorna o resto do tabuleiro sem modificar a linha especificada."
+    (cond
+        ((null tabuleiro) nil)
+        ((= indice-linha 0) (cons nova-linha (cdr tabuleiro)))
+        (t (cons (car tabuleiro) (substituir-resto (cdr tabuleiro) (1- indice-linha) nova-linha)))
+    )
+)
 
 
 (defun substituir-simetrico (numero tabuleiro)
 "Função que recebe um número, um tabuleiro. A função vai retornar o tabuleiro 
 com o simétrico do número da variável numero substituido por NIL"
-    (let* ((simetrico (obter-simetrico numero)) (posicao (procurar-posicao tabuleiro simetrico)))
-        (cond 
-            ((null posicao) nil)
-            (t (substituir (nth 0 posicao) (nth 1 posicao) tabuleiro))
-        )
+    (cond 
+        ((null (procurar-posicao tabuleiro (obter-simetrico numero))) tabuleiro)
+        (t (substituir (nth 0 (procurar-posicao tabuleiro (obter-simetrico numero))) (nth 1 (procurar-posicao tabuleiro (obter-simetrico numero))) tabuleiro))
     )
 )
-
-; (defun substituir-simetrico (numero tabuleiro &optional (valor-linha 0))
-; "Função que recebe um número, um tabuleiro. A função vai retornar o tabuleiro 
-; com o simétrico do número da variável numero substituido por NIL"
-;     (cond 
-;         ((>= valor-linha (length tabuleiro)) nil)
-;         ((let ((lista-linha (linha valor-linha tabuleiro)) (simetrico (obter-simetrico numero)))
-;             (cond 
-;                 ((find simetrico lista-linha) (substituir valor-linha (position simetrico lista-linha) tabuleiro))
-;                 (t (substituir-simetrico numero tabuleiro (+ valor-linha 1)))
-;             )
-;         ))
-;     )
-; )
 
 (defun obter-simetrico (numero)
 "Função que recebe um número e devolve o simétrico desse número (exemplo: 56->65)"
   (parse-integer (coerce (reverse (coerce (princ-to-string numero) 'list)) 'string))
 )
 
-(defun substituir-duplo (tabuleiro &optional (numero 0))
-    (cond ((= numero 0) (setq numero (maior-duplo tabuleiro))))
-    (let ((posicao (procurar-posicao tabuleiro numero)))
-        (substituir (nth 0 posicao) (nth 1 posicao) tabuleiro)
-    )   
+(defun substituir-duplo (tabuleiro)
+    (cond 
+        ((null (maior-duplo tabuleiro)) nil)
+        (t (substituir (nth 0 (procurar-posicao tabuleiro (maior-duplo tabuleiro))) (nth 1 (procurar-posicao tabuleiro (maior-duplo tabuleiro))) tabuleiro))
+    )
 )
 
 (defun maior-duplo (tabuleiro)
 "Função que recebe um tabuleiro e retorna o duplo maior desse tabuleiro"
-    (let* ((tabuleiro-liso (alisa tabuleiro)) (duplos (remove-if-not #'isduplo tabuleiro-liso)))
-        (setq duplos (apply #'max duplos))
-        (cond ((null duplos) nil) (t duplos))
+    (cond 
+        ((null (remove-if-not #'isduplo (alisa tabuleiro))) nil) 
+        (t (apply #'max (remove-if-not #'isduplo (alisa tabuleiro))))
     )
 )
 
@@ -247,6 +235,7 @@ com o simétrico do número da variável numero substituido por NIL"
 "Recebe um número e retorna verdadeiro (T) se o número for um duplo, retorna nil caso contrário"
     (cond 
         ((null numero) nil)
+        ((not (integerp numero)) nil)
         ((= (mod numero 11) 0) T)
         (t nil)
     )
@@ -268,6 +257,7 @@ Caso o valor não se encontre no tabuleiro retorna NIL."
 )
 
 (defun print-tabuleiro (tabuleiro)
+"Recebe um tabuleiro e imprime o tabuleiro no ecrã de forma formatada"
     (cond 
         ((null tabuleiro) nil)
         (t (progn 
@@ -278,155 +268,170 @@ Caso o valor não se encontre no tabuleiro retorna NIL."
     )
 )
 
+(defun operadores ()
+ "Cria uma lista com todos os operadores do problema."
+ (list 'operador-1 'operador-2 'operador-3 'operador-4 'operador-5 'operador-6 'operador-7 'operador-8))
+
+
 ;;; Operadores do problema (ver lab7)
 ;; operador-1
 ;usar função substituir() para substituir pelo valor, e depois testar se é simétrico 
 ;ou duplo e aplicar a regra
+(defun operador (tabuleiro nova-pos-linha nova-pos-coluna)
+"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas para baixo e 1 para a esquerda.
+Devolve o tabuleiro com a nova posição do cavalo."
+    (cond ((or (null nova-pos-linha) (null nova-pos-coluna)) nil)
+        (t (cond 
+            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
+                nil)
+            ((equal (celula nova-pos-linha nova-pos-coluna tabuleiro) 'nil) nil)
+            (t (cond
+                    ((null (substituir (nth 0 (procurar-posicao tabuleiro 'T)) (nth 1 (procurar-posicao tabuleiro 'T)) (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T))) nil)
+                    (t (substituir (nth 0 (procurar-posicao tabuleiro 'T)) (nth 1 (procurar-posicao tabuleiro 'T)) (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)))
+                )
+            )
+        ))
+    )  
+)
+
 (defun operador-1 (tabuleiro)
-"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas para baixo e 1 para a esquerda.
-Devolve o tabuleiro com a nova posição do cavalo."
-    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
-           (nova-pos-linha (+ (nth 0 posicao-cavalo) 2))
-           (nova-pos-coluna (- (nth 1 posicao-cavalo) 1)))
-        (cond 
-            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
-                (error "operador-1 não pode ser realizado, operador está fora dos limites do tabuleiro."))
-            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
-        )
-        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
-        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
-        (print-tabuleiro tabuleiro)
+;(print-tabuleiro tabuleiro)
+;(format t "operador-1: ~d~%"  (procurar-posicao tabuleiro 'T))
+
+    (cond 
+        ((null (procurar-posicao tabuleiro 'T)) nil)
+        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 2) (- (nth 1  (procurar-posicao tabuleiro 'T)) 1)))
     )
 )
 
-;;operador-2
 (defun operador-2 (tabuleiro)
-"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas para baixo e 1 para a esquerda.
-Devolve o tabuleiro com a nova posição do cavalo."
-    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
-           (nova-pos-linha (+ (nth 0 posicao-cavalo) 2))
-           (nova-pos-coluna (+ (nth 1 posicao-cavalo) 1)))
-        (cond 
-            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
-                (error "operador-2 não pode ser realizado, operador está fora dos limites do tabuleiro."))
-            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
-        )
-        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
-        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
-        (print-tabuleiro tabuleiro)
+    (cond 
+        ((null (procurar-posicao tabuleiro 'T)) nil)
+        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 2) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 1)))
     )
 )
 
-;;operador-3
 (defun operador-3 (tabuleiro)
-"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas para a direita e 1 para baixo.
-Devolve o tabuleiro com a nova posição do cavalo."
-    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
-           (nova-pos-linha (+ (nth 0 posicao-cavalo) 1))
-           (nova-pos-coluna (+ (nth 1 posicao-cavalo) 2)))
-        (cond 
-            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
-                (error "operador-3 não pode ser realizado, operador está fora dos limites do tabuleiro."))
-            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
-        )
-        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
-        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
-        (print-tabuleiro tabuleiro)
+    (cond 
+        ((null (procurar-posicao tabuleiro 'T)) nil)
+        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 1) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 2)))
     )
 )
 
-;;operador-4
 (defun operador-4 (tabuleiro)
-"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas para a direita e 1 para cima
-Devolve o tabuleiro com a nova posição do cavalo."
-    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
-           (nova-pos-linha (- (nth 0 posicao-cavalo) 1))
-           (nova-pos-coluna (+ (nth 1 posicao-cavalo) 2)))
-        (cond 
-            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
-                (error "operador-4 não pode ser realizado, operador está fora dos limites do tabuleiro."))
-            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
-        )
-        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
-        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
-        (print-tabuleiro tabuleiro)
+    (cond 
+        ((null (procurar-posicao tabuleiro 'T)) nil)
+        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 1) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 2)))
     )
 )
 
-;;operador-5
 (defun operador-5 (tabuleiro)
-"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas cima e 1 para a direita
-Devolve o tabuleiro com a nova posição do cavalo."
-    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
-           (nova-pos-linha (- (nth 0 posicao-cavalo) 2))
-           (nova-pos-coluna (+ (nth 1 posicao-cavalo) 1)))
-        (cond 
-            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
-                (error "operador-5 não pode ser realizado, operador está fora dos limites do tabuleiro."))
-            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
-        )
-        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
-        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
-        (print-tabuleiro tabuleiro)
+    (cond 
+        ((null (procurar-posicao tabuleiro 'T)) nil)
+        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 2) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 1)))
     )
 )
 
-;;operador-6
 (defun operador-6 (tabuleiro)
-"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas cima e 1 para a esquerda
-Devolve o tabuleiro com a nova posição do cavalo."
-    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
-           (nova-pos-linha (- (nth 0 posicao-cavalo) 2))
-           (nova-pos-coluna (- (nth 1 posicao-cavalo) 1)))
-        (cond 
-            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
-                (error "operador-6 não pode ser realizado, operador está fora dos limites do tabuleiro."))
-            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
-        )
-        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
-        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
-        (print-tabuleiro tabuleiro)
+    (cond 
+        ((null (procurar-posicao tabuleiro 'T)) nil)
+        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 2) (- (nth 1  (procurar-posicao tabuleiro 'T)) 1)))
     )
 )
 
-;;operador-7
 (defun operador-7 (tabuleiro)
-"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas a esquerda e 1 para cima
-Devolve o tabuleiro com a nova posição do cavalo."
-    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
-           (nova-pos-linha (- (nth 0 posicao-cavalo) 1))
-           (nova-pos-coluna (- (nth 1 posicao-cavalo) 2)))
-        (cond 
-            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
-                (error "operador-7 não pode ser realizado, operador está fora dos limites do tabuleiro."))
-            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
-        )
-        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
-        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
-        (print-tabuleiro tabuleiro)
+    (cond 
+        ((null (procurar-posicao tabuleiro 'T)) nil)
+        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 1) (- (nth 1  (procurar-posicao tabuleiro 'T)) 2)))
     )
 )
 
-;;operador-8
 (defun operador-8 (tabuleiro)
-"Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas a esquerda e 1 para baixo
-Devolve o tabuleiro com a nova posição do cavalo."
-    (let* ((posicao-cavalo (procurar-posicao tabuleiro 'T))
-           (nova-pos-linha (+ (nth 0 posicao-cavalo) 1))
-           (nova-pos-coluna (- (nth 1 posicao-cavalo) 2)))
-        (cond 
-            ((or (>= nova-pos-linha (length (car tabuleiro))) (>= nova-pos-coluna (length tabuleiro)) (< nova-pos-linha 0) (< nova-pos-coluna 0)) 
-                (error "operador-8 não pode ser realizado, operador está fora dos limites do tabuleiro."))
-            ((equal (nth nova-pos-coluna (nth nova-pos-linha tabuleiro)) 'nil) (error "Esta casa já foi visitada"))
+    (cond 
+        ((null (procurar-posicao tabuleiro 'T)) nil)
+        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 1) (- (nth 1  (procurar-posicao tabuleiro 'T)) 2)))
+    )
+)
+
+; no do problema
+; - tabuleiro
+; - profundidade do nó na arvore
+; - estado do problema, número de pontos já feitos (?) 
+; - operadores
+ 
+;;; Construtor
+(defun cria-no (tabuleiro profundidade pontuacao lista-operadores solucao)
+  (list tabuleiro profundidade pontuacao lista-operadores solucao)
+)
+
+
+(defun escrever-no (no)
+ "Permite escrever um no, por defeito no ecra."
+    (format t "Tabuleiro ~%")
+    (print-tabuleiro (no-tabuleiro no))
+    (format t " | Profundidade: ~a~% | Pontos: ~a~% | Operadores: ~a~% | Objetivo: ~a~%-----------------------" 
+            (no-profundidade no) (no-pontuacao no) (no-operadores no) (no-solucao no))
+    (format t "------------------------------~%")
+)
+
+(defun escrever-nos (lista)
+"Permite escrever no ecra um no do problema."
+    (cond 
+        ((null lista) nil)
+        (t (progn
+            (format t "Tabuleiro ~%")
+            (print-tabuleiro (no-tabuleiro (car lista)))
+            (format t "| Profundidade: ~a~% | Pontos: ~a~% | Operadores: ~a~% | Objetivo: ~a~%-----------------------" 
+                    (no-profundidade (car lista)) (no-pontuacao (car lista)) (no-operadores (car lista)) (no-solucao (car lista)))
+            (format t "------------------------------~%")
+            (escrever-nos (cdr lista))
+            )
         )
-        (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)
-        (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) tabuleiro)
-        (print-tabuleiro tabuleiro)
     )
 )
 
 
-; Testar nos operadores se a posicao-cavalo é nil ou nao
-; Estudar error handling e se calhar trocar nos métodos que retornem erro para retornar nil em vez de erro(?)
-; Pensar que na interação com o jogador poderei ter que dar catch de erros e mostrar ao jogador esses erros, 
-;se calhar terei que deixar alguns métodos a retornar error para dar catch no método de interação com o jogador
+;;;; Metodos seletores
+(defun no-tabuleiro (no)
+   (nth 0 no) 
+)
+
+(defun no-profundidade (no)
+    (nth 1 no)
+)
+
+(defun no-pontuacao (no)
+    (nth 2 no)
+)
+
+(defun no-operadores (no)
+    (nth 3 no)    
+)
+
+(defun no-solucao (no)
+    (nth 4 no)
+)
+
+
+(defun novo-sucessor (no operador)
+    (let* ((tabuleiro (funcall operador (no-tabuleiro no)))
+          (valor-celula (celula (nth 0 (procurar-posicao tabuleiro 'T)) (nth 1 (procurar-posicao tabuleiro 'T)) (no-tabuleiro no))))
+;(format t "novo-sucessor tabuleiro, operador: ~d~%" operador)
+;(print-tabuleiro tabuleiro)
+;(format t "------------------------~%")
+        (cond 
+            ((null valor-celula) (cria-no tabuleiro (+ (no-profundidade no) 1) (no-pontuacao no) (alisa (list (no-operadores no) operador)) (no-solucao no)))
+            (t (cria-no tabuleiro (+ (no-profundidade no) 1) (+ (no-pontuacao no) valor-celula) (alisa (list (no-operadores no) operador)) (no-solucao no)))
+        )   
+    )
+)
+
+(defun sucessores (no lista-operadores algoritmo &optional (profundidade 9999))
+;(format t "sucessores operadores: ~d~%" lista-operadores)
+;(escrever-no no)
+    (cond 
+        ((and (equal algoritmo 'dfs) (= profundidade (no-profundidade no))) no)
+        ((null lista-operadores) nil)
+        (t (cons (novo-sucessor no (car lista-operadores)) (sucessores no (cdr lista-operadores) algoritmo)))
+    )
+)
