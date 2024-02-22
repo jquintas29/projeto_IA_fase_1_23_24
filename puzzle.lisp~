@@ -429,8 +429,8 @@ Devolve o tabuleiro com a nova posição do cavalo."
     (let* ((tabuleiro (funcall operador (no-tabuleiro no)))
           (valor-celula (celula (nth 0 (procurar-posicao tabuleiro 'T)) (nth 1 (procurar-posicao tabuleiro 'T)) (no-tabuleiro no))))
         (cond 
-            ((null valor-celula) (cria-no tabuleiro (+ (no-profundidade no) 1) (no-pontuacao no) (list (no-operadores no) operador) (no-solucao no)))
-            (t (cria-no tabuleiro (+ (no-profundidade no) 1) (+ (no-pontuacao no) valor-celula) (list (no-operadores no) operador) (no-solucao no)))
+            ((null valor-celula) (cria-no tabuleiro (+ (no-profundidade no) 1) (no-pontuacao no) (append (no-operadores no) (list operador) ) (no-solucao no)))
+            (t (cria-no tabuleiro (+ (no-profundidade no) 1) (+ (no-pontuacao no) valor-celula) (append (no-operadores no) (list operador)) (no-solucao no)))
         )   
     )
 )

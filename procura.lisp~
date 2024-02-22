@@ -35,18 +35,15 @@
 ;;; Algoritmos
 ;; procura na largura (bfs)
 (defun bfs (no funcao-solucao funcao-sucessores lista-operadores &optional (abertos '()) (fechados '()))
-     (cond 
-        ((and (not (null (no-tabuleiro no)))) 
+    (cond 
+        ((and (not (null (no-tabuleiro no))) (funcall funcao-solucao no)) (progn (format t "No solução~%") no))
+        ((and (not (null (no-tabuleiro no))))
             (let ((novos-abertos (abertos-bfs abertos (funcall funcao-sucessores no lista-operadores 'bfs ))))
-                (cond 
-                    ((and (funcall funcao-solucao (car novos-abertos))) (progn (format t "No solução~%")(car novos-abertos)))
-                    (t (bfs (car novos-abertos) funcao-solucao funcao-sucessores lista-operadores (cdr novos-abertos) (append fechados (cons no nil))))
-                )
+                (bfs (car novos-abertos) funcao-solucao funcao-sucessores lista-operadores (cdr novos-abertos) (append fechados (cons no nil)))
             )
         )
         (t (cond 
             ((null abertos) (progn (format t "Não tem solução~%") nil))
-            ;((and (funcall funcao-solucao (car abertos))) (progn (format t "No solução~%")(car abertos)))
             (t (bfs (car abertos) funcao-solucao funcao-sucessores lista-operadores (cdr abertos) fechados))
         ))
     )

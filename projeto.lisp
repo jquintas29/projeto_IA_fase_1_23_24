@@ -17,8 +17,8 @@ utilizar para procurar a solução (neste caso a procura na profundidade ou na lar
                (no (cria-no tabuleiro-novo 0 (celula (nth 0 cavalo) (nth 1 cavalo) tabuleiro) nil (car (cdr tipo-tabuleiro)))))
             (escrever-no no)
             (cond
-		        ((equal algoritmo 'bfs) (escrever-no (funcall algoritmo no 'no-solucaop 'sucessores (operadores))))
-		        ((equal algoritmo 'dfs) (escrever-no (funcall algoritmo no 'no-solucaop 'sucessores (operadores) profundidade)))
+		        ((equal algoritmo 'bfs) (escrever-dados-procura (tempo-execucao-bfs algoritmo no 'no-solucaop 'sucessores (operadores))))
+		        ((equal algoritmo 'dfs) (escrever-dados-procura (tempo-execucao-dfs algoritmo no 'no-solucaop 'sucessores (operadores) profundidade)))
 	        )
         )
     )

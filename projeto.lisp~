@@ -46,7 +46,7 @@ utilizar para procurar a solução (neste caso a procura na profundidade ou na lar
             (3 '(tabuleiro-c 270))
             (4 '(tabuleiro-d 600))
             (5 '(tabuleiro-e 300))
-            (6 '(tabuleiro-aleatorio 1000))
+            (6 '(tabuleiro-aleatorio 2000))
         )
     )
 )
