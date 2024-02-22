@@ -370,6 +370,7 @@ Devolve o tabuleiro com a nova posição do cavalo."
 ; - profundidade do nó na arvore
 ; - estado do problema, número de pontos já feitos (?) 
 ; - operadores
+; - pontuação objetivo
  
 ;;; Construtor
 (defun cria-no (tabuleiro profundidade pontuacao lista-operadores solucao)
@@ -402,6 +403,17 @@ Devolve o tabuleiro com a nova posição do cavalo."
     )
 )
 
+(defun escrever-dados-procura (lista)
+    (format t "Tabuleiro~%")
+    (print-tabuleiro (no-tabuleiro (car (car lista))))
+    (format t " | Profundidade: ~a~% | Pontos: ~a~% | Operadores: ~a~% | Solucao: ~a~% | Tempo de execução: ~d~%" 
+            (no-profundidade (car (car lista))) (no-pontuacao (car (car lista))) (no-operadores (car (car lista))) (no-solucao (car (car lista))) (car (cdr lista)))
+    (format t "------------------------------~%Lista de nós abertos: ~d total de nós na lista~%" (length (nth 1 (car lista))))
+    (escrever-nos (nth 1 (car lista)))
+    (format t "------------------------------~%Lista de nós fechados: ~d total de nós na lista~%" (length (nth 2 (car lista))))
+    (escrever-nos (nth 2 (car lista)))
+    (format t "-----------------------------------------------------~%")
+)
 
 ;;;; Metodos seletores
 (defun no-tabuleiro (no)
