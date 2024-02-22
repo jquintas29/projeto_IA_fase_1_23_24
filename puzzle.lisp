@@ -130,8 +130,18 @@ com todos os elementos agregados numa única lista principal."
 (defun lista-numeros (&optional (n 100))
 "Função que recebe um número positivo n e cria uma lista com todos os números
 entre 0 (inclusivé) e o número passado como argumento (exclusivé). Por default o n é 100"
-    (cond ((= n 0) nil)
-          (t (cons (- n 1) (lista-numeros (- n 1)))))
+    ;(cond ((= n 0) nil)
+     ;     (t (cons (- n 1) (lista-numeros (- n 1)))))
+'(99 98 97 96 95 94 93 92 91 90
+ 89 88 87 86 85 84 83 82 81 80
+ 79 78 77 76 75 74 73 72 71 70
+ 69 68 67 66 65 64 63 62 61 60
+ 59 58 57 56 55 54 53 52 51 50
+ 49 48 47 46 45 44 43 42 41 40
+ 39 38 37 36 35 34 33 32 31 30
+ 29 28 27 26 25 24 23 22 21 20
+ 19 18 17 16 15 14 13 12 11 10
+ 9 8 7 6 5 4 3 2 1 0)
 )
 
 (defun remover-se(pred lista)
@@ -144,14 +154,18 @@ exemplo: (remover-se #'(lambda (x) (= x 0)) lista) -> devolve a lista sem os áto
     )
 )
 
-(defun baralhar (lista)
-"Recebe uma lista e irá mudar aleatoriamente os números de forma a criar uma lista baralhada."
-    (cond ((null lista) nil)
-        (t (let ((numberRandom (nth (random (length lista)) lista)))
-                (cons numberRandom (baralhar (remover-se #'(lambda (x) (= x numberRandom)) lista)))
-            )
-        )
+(defun numero-aleatorio (lista)
+    (cond 
+        ((= (length lista) 0) 0)
+        (t (nth (random (length lista)) lista))
     )
+)
+
+(defun baralhar (remover &optional (nova-lista '()) (num (numero-aleatorio remover)))
+    (cond 
+        ((= (length remover) 0) nova-lista)
+        (T (baralhar (remove-if #'(lambda (x) (= x num)) remover) (cons num nova-lista)))
+    ) 
 )
 
 (defun tabuleiro-aleatorio (&optional (lista (baralhar (lista-numeros))) (n 10))
@@ -165,21 +179,21 @@ e vai devolver essa lista dividida em sublistas de n elementos recebido como par
 
 (defun substituir (indice-linha indice-coluna tabuleiro &optional (novo-numero 'nil))
   "Substitui o número em uma posição específica do tabuleiro."
-    (cond 
-        ((not (equal novo-numero 'nil))
-            (cond 
-                ((isduplo (celula indice-linha indice-coluna tabuleiro))
-                    (cond 
-                        ((maior-duplo (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero))) 
-                            (substituir-duplo (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero))))
-                        (t (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero)))
+    (let ((novo-tabuleiro (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero))))
+        (cond 
+            ((not (equal novo-numero 'nil))
+                (cond 
+                    ((isduplo (celula indice-linha indice-coluna tabuleiro))
+                        (cond 
+                            ((maior-duplo novo-tabuleiro) (substituir-duplo novo-tabuleiro))
+                            (t novo-tabuleiro)
+                        )
                     )
+                    (t (substituir-simetrico (celula indice-linha indice-coluna tabuleiro) novo-tabuleiro))
                 )
-              (t (substituir-simetrico (celula indice-linha indice-coluna tabuleiro)  
-                    (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero))))
             )
+            (t novo-tabuleiro)
         )
-        (t (substituir-resto tabuleiro indice-linha (substituir-linha (nth indice-linha tabuleiro) indice-coluna novo-numero)))
     )
 )
 
@@ -223,11 +237,12 @@ com o simétrico do número da variável numero substituido por NIL"
     )
 )
 
-(defun maior-duplo (tabuleiro)
+(defun maior-duplo (tabuleiro &optional (duplos '()))
 "Função que recebe um tabuleiro e retorna o duplo maior desse tabuleiro"
-    (cond 
-        ((null (remove-if-not #'isduplo (alisa tabuleiro))) nil) 
-        (t (apply #'max (remove-if-not #'isduplo (alisa tabuleiro))))
+    (cond
+        ((null tabuleiro) (cond ((null duplos) nil) (t (apply #'max duplos)))) 
+        ((null (remove-if-not #'isduplo (car tabuleiro))) (maior-duplo (cdr tabuleiro) duplos))
+        (t (maior-duplo (cdr tabuleiro) (append (remove-if-not #'isduplo (car tabuleiro)) duplos)))
     )
 )
 
@@ -277,7 +292,7 @@ Caso o valor não se encontre no tabuleiro retorna NIL."
 ;; operador-1
 ;usar função substituir() para substituir pelo valor, e depois testar se é simétrico 
 ;ou duplo e aplicar a regra
-(defun operador (tabuleiro nova-pos-linha nova-pos-coluna)
+(defun operador (tabuleiro nova-pos-linha nova-pos-coluna posicao-cavalo)
 "Função que recebe um tabuleiro. Realiza um movimento do cavalo 2 casas para baixo e 1 para a esquerda.
 Devolve o tabuleiro com a nova posição do cavalo."
     (cond ((or (null nova-pos-linha) (null nova-pos-coluna)) nil)
@@ -286,8 +301,8 @@ Devolve o tabuleiro com a nova posição do cavalo."
                 nil)
             ((equal (celula nova-pos-linha nova-pos-coluna tabuleiro) 'nil) nil)
             (t (cond
-                    ((null (substituir (nth 0 (procurar-posicao tabuleiro 'T)) (nth 1 (procurar-posicao tabuleiro 'T)) (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T))) nil)
-                    (t (substituir (nth 0 (procurar-posicao tabuleiro 'T)) (nth 1 (procurar-posicao tabuleiro 'T)) (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)))
+                    ((null (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T))) nil)
+                    (t (substituir (nth 0 posicao-cavalo) (nth 1 posicao-cavalo) (substituir nova-pos-linha nova-pos-coluna tabuleiro 'T)))
                 )
             )
         ))
@@ -295,61 +310,58 @@ Devolve o tabuleiro com a nova posição do cavalo."
 )
 
 (defun operador-1 (tabuleiro)
-;(print-tabuleiro tabuleiro)
-;(format t "operador-1: ~d~%"  (procurar-posicao tabuleiro 'T))
-
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
-        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 2) (- (nth 1  (procurar-posicao tabuleiro 'T)) 1)))
+        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 2) (- (nth 1  (procurar-posicao tabuleiro 'T)) 1) (procurar-posicao tabuleiro 'T)))
     )
 )
 
 (defun operador-2 (tabuleiro)
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
-        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 2) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 1)))
+        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 2) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 1) (procurar-posicao tabuleiro 'T)))
     )
 )
 
 (defun operador-3 (tabuleiro)
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
-        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 1) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 2)))
+        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 1) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 2) (procurar-posicao tabuleiro 'T)))
     )
 )
 
 (defun operador-4 (tabuleiro)
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
-        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 1) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 2)))
+        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 1) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 2) (procurar-posicao tabuleiro 'T)))
     )
 )
 
 (defun operador-5 (tabuleiro)
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
-        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 2) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 1)))
+        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 2) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 1) (procurar-posicao tabuleiro 'T)))
     )
 )
 
 (defun operador-6 (tabuleiro)
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
-        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 2) (- (nth 1  (procurar-posicao tabuleiro 'T)) 1)))
+        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 2) (- (nth 1  (procurar-posicao tabuleiro 'T)) 1) (procurar-posicao tabuleiro 'T)))
     )
 )
 
 (defun operador-7 (tabuleiro)
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
-        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 1) (- (nth 1  (procurar-posicao tabuleiro 'T)) 2)))
+        (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 1) (- (nth 1  (procurar-posicao tabuleiro 'T)) 2) (procurar-posicao tabuleiro 'T)))
     )
 )
 
 (defun operador-8 (tabuleiro)
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
-        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 1) (- (nth 1  (procurar-posicao tabuleiro 'T)) 2)))
+        (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 1) (- (nth 1  (procurar-posicao tabuleiro 'T)) 2) (procurar-posicao tabuleiro 'T)))
     )
 )
 
@@ -416,19 +428,14 @@ Devolve o tabuleiro com a nova posição do cavalo."
 (defun novo-sucessor (no operador)
     (let* ((tabuleiro (funcall operador (no-tabuleiro no)))
           (valor-celula (celula (nth 0 (procurar-posicao tabuleiro 'T)) (nth 1 (procurar-posicao tabuleiro 'T)) (no-tabuleiro no))))
-;(format t "novo-sucessor tabuleiro, operador: ~d~%" operador)
-;(print-tabuleiro tabuleiro)
-;(format t "------------------------~%")
         (cond 
-            ((null valor-celula) (cria-no tabuleiro (+ (no-profundidade no) 1) (no-pontuacao no) (alisa (list (no-operadores no) operador)) (no-solucao no)))
-            (t (cria-no tabuleiro (+ (no-profundidade no) 1) (+ (no-pontuacao no) valor-celula) (alisa (list (no-operadores no) operador)) (no-solucao no)))
+            ((null valor-celula) (cria-no tabuleiro (+ (no-profundidade no) 1) (no-pontuacao no) (append (no-operadores no) (list operador) ) (no-solucao no)))
+            (t (cria-no tabuleiro (+ (no-profundidade no) 1) (+ (no-pontuacao no) valor-celula) (append (no-operadores no) (list operador)) (no-solucao no)))
         )   
     )
 )
 
 (defun sucessores (no lista-operadores algoritmo &optional (profundidade 9999))
-;(format t "sucessores operadores: ~d~%" lista-operadores)
-;(escrever-no no)
     (cond 
         ((and (equal algoritmo 'dfs) (= profundidade (no-profundidade no))) no)
         ((null lista-operadores) nil)

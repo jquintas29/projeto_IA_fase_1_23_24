@@ -1,13 +1,9 @@
-
-
 ;;; Ficheiro projeto.lisp
 ;; Carrega outros ficheiros de código, escreve e lê ficheiros, 
 ;; e trata da interação com o utilizador
 
 (load "C:/Users/joaoq/OneDrive/Faculdade/Inteligencia_artificial/Projeto_IA/projeto_IA_fase_1_23_24/puzzle.lisp")
-;;(load "C:/IPS/EI/3Ano/IA/Projeto/F1/puzzle.lisp")
 (load "C:/Users/joaoq/OneDrive/Faculdade/Inteligencia_artificial/Projeto_IA/projeto_IA_fase_1_23_24/procura.lisp")
-;;(load "C:/IPS/EI/3Ano/IA/Projeto/F1/procura.lisp")
 
 (defun iniciar ()
 "Permite iniciar o programa, fazendo a leitura do teclado do estado inicial e do algoritmo a 
@@ -21,8 +17,8 @@ utilizar para procurar a solução (neste caso a procura na profundidade ou na lar
                (no (cria-no tabuleiro-novo 0 (celula (nth 0 cavalo) (nth 1 cavalo) tabuleiro) nil (car (cdr tipo-tabuleiro)))))
             (escrever-no no)
             (cond
-		        ((equal algoritmo 'bfs) (escreve-no (funcall algoritmo no 'no-solucaop 'sucessores (operadores))))
-		        ((equal algoritmo 'dfs) (escreve-no (funcall algoritmo no 'no-solucaop 'sucessores (operadores) profundidade)))
+		        ((equal algoritmo 'bfs) (escrever-no (funcall algoritmo no 'no-solucaop 'sucessores (operadores))))
+		        ((equal algoritmo 'dfs) (escrever-no (funcall algoritmo no 'no-solucaop 'sucessores (operadores) profundidade)))
 	        )
         )
     )
@@ -43,15 +39,14 @@ utilizar para procurar a solução (neste caso a procura na profundidade ou na lar
         (format t "~%5- Tabuleiro E ~%")
         (print-tabuleiro (tabuleiro-e))
         (format t "~%6- Tabuleiro F - tabuleiro gerado aleatoriamente ~%")
-        (let ((resposta (read)))
-            (cond 
-                ((= resposta 1) '(tabuleiro-a 70)) 
-                ((= resposta 2) '(tabuleiro-b 60))
-                ((= resposta 3) '(tabuleiro-c 270))
-                ((= resposta 4) '(tabuleiro-d 600))
-                ((= resposta 5) '(tabuleiro-e 300))
-                (t '(tabuleiro-aleatorio 200))
-            )
+        (case (read)
+            (1 '(tabuleiro-a 70))
+            (1 '(tabuleiro-a 70)) 
+            (2 '(tabuleiro-b 60))
+            (3 '(tabuleiro-c 270))
+            (4 '(tabuleiro-d 600))
+            (5 '(tabuleiro-e 300))
+            (6 '(tabuleiro-aleatorio 1000))
         )
     )
 )
@@ -83,12 +78,10 @@ utilizar para procurar a solução (neste caso a procura na profundidade ou na lar
         (format t "1- Procura na largura (bfs) ~%")
         (format t "2- Procura na profundidade (dfs) ~%")
         (format t "3- Procura por A* ~%")
-        (let ((resposta (read)))
-            (cond 
-                ((= resposta 1) 'bfs) 
-                ((= resposta 2) 'dfs)
-                (t 'A)
-            )
+        (case (read)
+            (1 'bfs) 
+            (2 'dfs)
+            (3 'A)
         )
     )
 )
