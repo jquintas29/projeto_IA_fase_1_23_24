@@ -1,4 +1,7 @@
-;;;Ficheiro puzzle.lisp
+;;;Ficheiro puzzle.lisp do Projeto 1
+;;; Autor: João Quintiliano, 201900287
+;;; Curso: Licenciatura em Engenharia Informática
+;;; UC: Inteligência Artificial
 ;;Ficheiro com operadores e heurísticas específicos do domínio da aplicação
 
 (defun tabuleiro-jogado ()
@@ -14,87 +17,6 @@
     (59 42 46 85 90 75 87 43 20 31) 
     (3 61 58 44 65 82 19 4 35 62) 
     (33 70 84 40 66 38 92 67 98 97)
-    )
-)
-
-
-(defun tabuleiro-a ()
-"Tabuleiro para o problema A"
-  '(
-    (02 20 44 nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil 03 30 nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil 22 nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil)
-    )
-)
-
-(defun tabuleiro-b ()
-"Tabuleiro para o problema B"
-  '(
-    (02 nil 04 nil 06 nil 08 nil 10 nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil 03 nil 05 nil 07 nil 09 nil 11) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil)
-    )
-)
-
-(defun tabuleiro-c ()
-"Tabuleiro para o problema c"
-  '(
-    (01 12 03 23 nil 88 nil nil nil nil) 
-    (21 45 43 nil nil nil nil nil nil nil) 
-    (nil 56 nil 78 nil nil nil nil nil nil) 
-    (89 nil 99 54 nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil)
-    )
-)
-
-(defun tabuleiro-d ()
-"Tabuleiro para o problema d"
-  '(
-    (98 97 96 95 94 93 92 91 90 89) 
-    (01 02 03 04 05 55 06 07 08 09) 
-    (nil 66 nil nil nil nil nil nil nil 11) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil 22 nil nil nil nil nil 33 nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil 88 nil nil nil 44 nil nil) 
-    (nil nil nil nil nil nil nil nil nil nil) 
-    (nil nil nil nil 77 nil nil nil nil nil) 
-    (nil nil nil nil nil nil 99 nil nil nil)
-    )
-)
-
-(defun tabuleiro-e ()
-"Tabuleiro para o problema e"
-  '(
-    (nil 05 nil nil nil 15 nil nil nil 25) 
-    (nil nil nil 06 nil nil nil 16 nil nil) 
-    (nil 04 nil nil nil 14 nil nil nil 24) 
-    (nil nil nil 07 nil nil nil 17 nil nil) 
-    (nil 03 nil nil nil 13 nil nil nil 23) 
-    (nil nil nil 08 nil nil nil 18 nil nil) 
-    (nil 02 nil nil nil 12 nil nil nil 22) 
-    (nil nil nil 09 nil nil nil 19 nil nil) 
-    (nil 01 nil nil nil 11 nil nil nil 21) 
-    (nil nil nil 10 nil nil nil 20 nil nil)
     )
 )
 
@@ -117,16 +39,6 @@ tabuleiro."
     )
 )
 
-; não parece estar aqui a fazer nada
-(defun alisa (lista)
-"Devolve todos os elementos de uma lista que poderá conter sub-listas, 
-com todos os elementos agregados numa única lista principal."
-    (cond ((null lista) nil)
-          ((atom (car lista)) (cons (car lista) (alisa (cdr lista))))
-          (t (append (alisa (car lista)) (alisa (cdr lista))))
-    )
-)
-
 (defun lista-numeros (&optional (n 100))
 "Função que recebe um número positivo n e cria uma lista com todos os números
 entre 0 (inclusivé) e o número passado como argumento (exclusivé). Por default o n é 100"
@@ -144,17 +56,8 @@ entre 0 (inclusivé) e o número passado como argumento (exclusivé). Por default o
  9 8 7 6 5 4 3 2 1 0)
 )
 
-(defun remover-se(pred lista)
-"Devolve a resconstrução da lista passada como argumento sem os elementos que verificam a
-condição/predicado passado pelo argumento pred 
-exemplo: (remover-se #'(lambda (x) (= x 0)) lista) -> devolve a lista sem os átomos 0"
-    (cond ((null lista) NIL) 
-          ((funcall pred (car lista)) (remover-se pred (cdr lista)))
-          (T (cons (car lista) (remover-se pred (cdr lista))))
-    )
-)
-
 (defun numero-aleatorio (lista)
+"Função que recebe uma lista e retorna um número aleatório dessa lista"
     (cond 
         ((= (length lista) 0) 0)
         (t (nth (random (length lista)) lista))
@@ -162,6 +65,7 @@ exemplo: (remover-se #'(lambda (x) (= x 0)) lista) -> devolve a lista sem os áto
 )
 
 (defun baralhar (remover &optional (nova-lista '()) (num (numero-aleatorio remover)))
+"Função que recebe um tabuleiro e baralha esse tabuleiro"
     (cond 
         ((= (length remover) 0) nova-lista)
         (T (baralhar (remove-if #'(lambda (x) (= x num)) remover) (cons num nova-lista)))
@@ -231,6 +135,7 @@ com o simétrico do número da variável numero substituido por NIL"
 )
 
 (defun substituir-duplo (tabuleiro)
+"Recebe um tabuleiro e substitui o maior duplo do tabuleiro"
     (cond 
         ((null (maior-duplo tabuleiro)) nil)
         (t (substituir (nth 0 (procurar-posicao tabuleiro (maior-duplo tabuleiro))) (nth 1 (procurar-posicao tabuleiro (maior-duplo tabuleiro))) tabuleiro))
@@ -271,17 +176,6 @@ Caso o valor não se encontre no tabuleiro retorna NIL."
     )
 )
 
-(defun print-tabuleiro (tabuleiro)
-"Recebe um tabuleiro e imprime o tabuleiro no ecrã de forma formatada"
-    (cond 
-        ((null tabuleiro) nil)
-        (t (progn 
-            (format t "~d~%" (car tabuleiro))
-            (print-tabuleiro (cdr tabuleiro))
-           )
-        )
-    )
-)
 
 (defun operadores ()
  "Cria uma lista com todos os operadores do problema."
@@ -310,6 +204,7 @@ Devolve o tabuleiro com a nova posição do cavalo."
 )
 
 (defun operador-1 (tabuleiro)
+"Movimento 1 do cavalo, 2 casa para baixo e 1 para a esquerda"
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
         (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 2) (- (nth 1  (procurar-posicao tabuleiro 'T)) 1) (procurar-posicao tabuleiro 'T)))
@@ -317,6 +212,7 @@ Devolve o tabuleiro com a nova posição do cavalo."
 )
 
 (defun operador-2 (tabuleiro)
+"Movimento 2 do cavalo, 2 casa para baixo e 1 para a direita"
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
         (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 2) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 1) (procurar-posicao tabuleiro 'T)))
@@ -324,6 +220,7 @@ Devolve o tabuleiro com a nova posição do cavalo."
 )
 
 (defun operador-3 (tabuleiro)
+"Movimento 3 do cavalo, 2 casa para a direita e 1 para baixo"
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
         (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 1) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 2) (procurar-posicao tabuleiro 'T)))
@@ -331,6 +228,7 @@ Devolve o tabuleiro com a nova posição do cavalo."
 )
 
 (defun operador-4 (tabuleiro)
+"Movimento 4 do cavalo, 2 casa para a direita e 1 para cima"
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
         (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 1) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 2) (procurar-posicao tabuleiro 'T)))
@@ -338,6 +236,7 @@ Devolve o tabuleiro com a nova posição do cavalo."
 )
 
 (defun operador-5 (tabuleiro)
+"Movimento 5 do cavalo, 2 casa para cima e 1 para a direita"
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
         (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 2) (+ (nth 1  (procurar-posicao tabuleiro 'T)) 1) (procurar-posicao tabuleiro 'T)))
@@ -345,6 +244,7 @@ Devolve o tabuleiro com a nova posição do cavalo."
 )
 
 (defun operador-6 (tabuleiro)
+"Movimento 6 do cavalo, 2 casa para cima e 1 para a esquerda"
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
         (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 2) (- (nth 1  (procurar-posicao tabuleiro 'T)) 1) (procurar-posicao tabuleiro 'T)))
@@ -352,6 +252,7 @@ Devolve o tabuleiro com a nova posição do cavalo."
 )
 
 (defun operador-7 (tabuleiro)
+"Movimento 7 do cavalo, 2 casa para a esquerda e 1 para cima"
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
         (t (operador tabuleiro (- (nth 0 (procurar-posicao tabuleiro 'T)) 1) (- (nth 1  (procurar-posicao tabuleiro 'T)) 2) (procurar-posicao tabuleiro 'T)))
@@ -359,6 +260,7 @@ Devolve o tabuleiro com a nova posição do cavalo."
 )
 
 (defun operador-8 (tabuleiro)
+"Movimento 8 do cavalo, 2 casa para a esquerda e 1 para baixo"
     (cond 
         ((null (procurar-posicao tabuleiro 'T)) nil)
         (t (operador tabuleiro (+ (nth 0 (procurar-posicao tabuleiro 'T)) 1) (- (nth 1  (procurar-posicao tabuleiro 'T)) 2) (procurar-posicao tabuleiro 'T)))
@@ -374,70 +276,97 @@ Devolve o tabuleiro com a nova posição do cavalo."
  
 ;;; Construtor
 (defun cria-no (tabuleiro profundidade pontuacao lista-operadores solucao)
+"Função que cria um nó do problema."
   (list tabuleiro profundidade pontuacao lista-operadores solucao)
 )
 
-
-(defun escrever-no (no)
- "Permite escrever um no, por defeito no ecra."
-    (format t "Tabuleiro ~%")
-    (print-tabuleiro (no-tabuleiro no))
-    (format t " | Profundidade: ~a~% | Pontos: ~a~% | Operadores: ~a~% | Objetivo: ~a~%-----------------------" 
-            (no-profundidade no) (no-pontuacao no) (no-operadores no) (no-solucao no))
-    (format t "------------------------------~%")
+(defun print-tabuleiro (tabuleiro &optional (g t) (linha 0))
+"Recebe um tabuleiro e imprime o tabuleiro no ecrã de forma formatada"
+    (cond 
+        ((null tabuleiro) nil)
+        ((= linha 0) (progn 
+                (format g "   ")
+                (mapcar #'(lambda (elemento) (format g " ~3a " elemento)) '(A B C D E F G H I J)) 
+                (format g "~%") (print-tabuleiro tabuleiro g (+ linha 1))))
+        (t (progn
+            (format g "~2a|" linha)
+            (mapcar #'(lambda (elemento) (format g " ~3a " elemento)) (car tabuleiro))
+            (format g "~%")
+            (print-tabuleiro (cdr tabuleiro) g (+ linha 1)) 
+           )
+        )
+    )
 )
 
-(defun escrever-nos (lista)
+(defun escrever-no (no &optional (g t))
+ "Permite escrever um no, por defeito no ecra."
+    (format g "Tabuleiro ~%")
+    (print-tabuleiro (no-tabuleiro no) g)
+    (format g " | Profundidade: ~a~% | Pontos: ~a~% | Operadores: ~a~% | Objetivo: ~a~%-----------------------" 
+            (no-profundidade no) (no-pontuacao no) (no-operadores no) (no-solucao no))
+    (format g "------------------------------~%")
+)
+
+(defun escrever-nos (lista &optional (g t))
 "Permite escrever no ecra um no do problema."
     (cond 
         ((null lista) nil)
         (t (progn
-            (format t "Tabuleiro ~%")
-            (print-tabuleiro (no-tabuleiro (car lista)))
-            (format t "| Profundidade: ~a~% | Pontos: ~a~% | Operadores: ~a~% | Objetivo: ~a~%-----------------------" 
-                    (no-profundidade (car lista)) (no-pontuacao (car lista)) (no-operadores (car lista)) (no-solucao (car lista)))
-            (format t "------------------------------~%")
-            (escrever-nos (cdr lista))
+            (escrever-no (car lista) g)
+            (escrever-nos (cdr lista) g)
             )
         )
     )
 )
 
-(defun escrever-dados-procura (lista)
-    (format t "Tabuleiro~%")
-    (print-tabuleiro (no-tabuleiro (car (car lista))))
-    (format t " | Profundidade: ~a~% | Pontos: ~a~% | Operadores: ~a~% | Solucao: ~a~% | Tempo de execução: ~d~%" 
-            (no-profundidade (car (car lista))) (no-pontuacao (car (car lista))) (no-operadores (car (car lista))) (no-solucao (car (car lista))) (car (cdr lista)))
-    (format t "------------------------------~%Lista de nós abertos: ~d total de nós na lista~%" (length (nth 1 (car lista))))
-    (escrever-nos (nth 1 (car lista)))
-    (format t "------------------------------~%Lista de nós fechados: ~d total de nós na lista~%" (length (nth 2 (car lista))))
-    (escrever-nos (nth 2 (car lista)))
-    (format t "-----------------------------------------------------~%")
+(defun escrever-dados-procura (lista &optional (g t))
+"Função que escreve os dados estatísticos das funções de procura"
+    (format g "Tabuleiro~%")
+    (print-tabuleiro (no-tabuleiro (car (car lista))) g)
+    (format g " | Profundidade: ~a~% | Pontos: ~a~% | Operadores: ~a~% | Objetivo: ~a~% | Tempo de execução: ~d~% | Penetrância: ~,2f~% | Fator de ramificação: 8~%" 
+            (no-profundidade (car (car lista))) 
+            (no-pontuacao (car (car lista))) 
+            (no-operadores (car (car lista))) 
+            (no-solucao (car (car lista))) 
+            (car (cdr lista)) 
+            (if (no-tabuleiro (car (car lista))) (/ (length (no-operadores (car (car lista)))) (length (nth 1 (car lista)))) nil)
+    )
+    (format g "------------------------------~%Lista de nós abertos: ~d total de nós na lista~%" (length (nth 1 (car lista))))
+    (escrever-nos (nth 1 (car lista)) g)
+    (format g "------------------------------~%Lista de nós fechados: ~d total de nós na lista~%" (length (nth 2 (car lista))))
+    (escrever-nos (nth 2 (car lista)) g)
+    (format g "-----------------------------------------------------~%")
 )
 
 ;;;; Metodos seletores
 (defun no-tabuleiro (no)
+"Devolve o tabuleiro do nó"
    (nth 0 no) 
 )
 
 (defun no-profundidade (no)
+"Devolve a profundidade do nó na árvore"
     (nth 1 no)
 )
 
 (defun no-pontuacao (no)
+"Devolve a pontuação do nó"
     (nth 2 no)
 )
 
 (defun no-operadores (no)
+"Devolve os operadores realizados do nó"
     (nth 3 no)    
 )
 
 (defun no-solucao (no)
+"Devolve a pontuação objetivo do nó"
     (nth 4 no)
 )
 
 
 (defun novo-sucessor (no operador)
+"Recebe um nó e um operador e gera o nó filho desse nó com a operação realizada."
     (let* ((tabuleiro (funcall operador (no-tabuleiro no)))
           (valor-celula (celula (nth 0 (procurar-posicao tabuleiro 'T)) (nth 1 (procurar-posicao tabuleiro 'T)) (no-tabuleiro no))))
         (cond 
@@ -448,6 +377,7 @@ Devolve o tabuleiro com a nova posição do cavalo."
 )
 
 (defun sucessores (no lista-operadores algoritmo &optional (profundidade 9999))
+"Devolve todos os nós filho do nó passado como argumento."
     (cond 
         ((and (equal algoritmo 'dfs) (= profundidade (no-profundidade no))) no)
         ((null lista-operadores) nil)

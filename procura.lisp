@@ -1,10 +1,11 @@
-;;; Ficheiro procura.lisp
+;;; Ficheiro procura.lisp do Projeto 1
+;;; Autor: João Quintiliano, 201900287
+;;; Curso: Licenciatura em Engenharia Informática
+;;; UC: Inteligência Artificial
 ;; Implementação dos algoritmos de procura BFS, DFS, A*
 
-; Escrever depois num ficheiro a solução encontrada, número de nós gerados 
-; número de nós expandidos, penetrância, fator de ramificação média e tempo de execução.
-
 (defun abertos-bfs (lista-abertos lista-sucessores)
+"Função que concatena os nós sucessores no fim da lista de abertos"
     (cond 
         ((null lista-sucessores) lista-abertos)
         ;((no-existep (car lista-sucessores) lista-abertos) (abertos-bfs lista-abertos (cdr lista-sucessores)))
@@ -13,10 +14,12 @@
 )
 
 (defun abertos-dfs (lista-abertos lista-sucessores)
+"Função que concatena os nós sucessores no inicio da lista de abertos"
     (cons (car lista-sucessores) (append (cdr lista-sucessores) lista-abertos))
 )
 
 (defun no-existep (no lista)
+"Verifica se um nó já existe numa determinada lista de nós."
     (cond 
         ((null lista) nil)
         ((equal (no-operadores no) (no-operadores (car lista))) T)
@@ -26,6 +29,7 @@
 
 ;;; Funcoes auxiliares da procura
 (defun no-solucaop (no)
+"Verifica se um nó é solução do problema."
     (cond 
         ((>= (no-pontuacao no) (no-solucao no)) T)
         (t nil)
@@ -33,22 +37,23 @@
 )
 
 (defun tempo-execucao-bfs (algoritmo no funcao-solucao funcao-sucessores lista-operadores)
-(format t "tempo de execucao~%")
-(escrever-no no)
+"Devolve o tempo que o algoritmo bfs leva para encontrar uma solução."
     (let ((inicio (get-internal-real-time)))
-        (list (funcall algoritmo no funcao-solucao funcao-sucessores lista-operadores) (- (get-internal-real-time) inicio))
+        (list (funcall algoritmo no funcao-solucao funcao-sucessores lista-operadores) (* (- (get-internal-real-time) inicio) 1000))
     )
 )
 
 (defun tempo-execucao-dfs (algoritmo no funcao-solucao funcao-sucessores lista-operadores profundidade)
+"Devolve o tempo que o algoritmo dfs leva para encontrar uma solução."
     (let ((inicio (get-internal-real-time)))
-        (list (funcall algoritmo no funcao-solucao funcao-sucessores lista-operadores profundidade) (- (get-internal-real-time) inicio))
+        (list (funcall algoritmo no funcao-solucao funcao-sucessores lista-operadores profundidade) (* (- (get-internal-real-time) inicio) 1000))
     )
 )
 
 ;;; Algoritmos
 ;; procura na largura (bfs)
 (defun bfs (no funcao-solucao funcao-sucessores lista-operadores &optional (abertos '()) (fechados '()))
+"Algoritmo de procura bfs. Devolve o melhor caminho da árvore."
     (cond 
         ((and (not (null (no-tabuleiro no))) (funcall funcao-solucao no)) (progn (format t "No solução~%") (list no abertos fechados)))
         ((and (not (null (no-tabuleiro no))))
@@ -57,7 +62,7 @@
             )
         )
         (t (cond 
-            ((null abertos) (progn (format t "Não tem solução~%") nil))
+            ((null abertos) (progn (format t "Não tem solução~%") (list nil abertos fechados)))
             (t (bfs (car abertos) funcao-solucao funcao-sucessores lista-operadores (cdr abertos) fechados))
         ))
     )
@@ -65,6 +70,7 @@
 
 ;; procura na profundidade (dfs)
 (defun dfs (no funcao-solucao funcao-sucessores lista-operadores profundidade &optional (abertos '()) (fechados '()))
+"Algoritmo de procura dfs. Devolve o melhor caminho da árvore."
     (cond 
         ((and (not (null (no-tabuleiro no))) (<= (no-profundidade no) profundidade) (funcall funcao-solucao no)) (progn (format t "No solução~%") (list no abertos fechados)))
         ((and (not (null (no-tabuleiro no))) (<= (no-profundidade no) profundidade))
@@ -73,7 +79,7 @@
             )
         )
         (t (cond 
-            ((null abertos) (progn (format t "Não tem solução~%") nil))
+            ((null abertos) (progn (format t "Não tem solução~%") (list nil abertos fechados)))
             (t (dfs (car abertos) funcao-solucao funcao-sucessores lista-operadores profundidade (cdr abertos) fechados))
         ))
     )
